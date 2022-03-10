@@ -1,18 +1,20 @@
-### Estraverse [![Build Status](https://secure.travis-ci.org/estools/estraverse.svg)](http://travis-ci.org/estools/estraverse)
+### Estraverse [![Build Status](https://secure.travis-ci.org/es-joy/estraverse.svg)](http://travis-ci.org/es-joy/estraverse)
 
-Estraverse ([estraverse](http://github.com/estools/estraverse)) is
+`@es-joy/estraverse` ([estraverse](http://github.com/es-joy/estraverse)) is
+a fork of [estraverse](https://github.com/estools/estraverse).
+
 [ECMAScript](http://www.ecma-international.org/publications/standards/Ecma-262.htm)
 traversal functions from [esmangle project](http://github.com/estools/esmangle).
 
 ### Documentation
 
-You can find usage docs at [wiki page](https://github.com/estools/estraverse/wiki/Usage).
+You can find usage docs at [wiki page](https://github.com/es-joy/estraverse/wiki/Usage).
 
 ### Example Usage
 
 The following code will output all variables declared at the root of a file.
 
-```javascript
+```js
 estraverse.traverse(ast, {
     enter (node, parent) {
         if (node.type == 'FunctionExpression' || node.type == 'FunctionDeclaration')
@@ -27,7 +29,7 @@ estraverse.traverse(ast, {
 
 We can use `this.skip`, `this.remove` and `this.break` functions instead of using Skip, Remove and Break.
 
-```javascript
+```js
 estraverse.traverse(ast, {
     enter (node) {
         this.break();
@@ -37,7 +39,7 @@ estraverse.traverse(ast, {
 
 And estraverse provides `estraverse.replace` function. When returning node from `enter`/`leave`, current node is replaced with it.
 
-```javascript
+```js
 const result = estraverse.replace(tree, {
     enter (node) {
         // Replace it with replaced.
@@ -49,7 +51,7 @@ const result = estraverse.replace(tree, {
 
 By passing `visitor.keys` mapping, we can extend estraverse traversing functionality.
 
-```javascript
+```js
 // This tree contains a user-defined `TestExpression` node.
 const tree = {
     type: 'TestExpression',
@@ -76,7 +78,7 @@ estraverse.traverse(tree, {
 
 By passing `visitor.fallback` option, we can control the behavior when encountering unknown nodes.
 
-```javascript
+```js
 // This tree contains a user-defined `TestExpression` node.
 const tree = {
     type: 'TestExpression',
@@ -100,7 +102,7 @@ estraverse.traverse(tree, {
 
 When `visitor.fallback` is a function, we can determine which keys to visit on each node.
 
-```javascript
+```js
 // This tree contains a user-defined `TestExpression` node.
 const tree = {
     type: 'TestExpression',
