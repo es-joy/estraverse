@@ -26,14 +26,11 @@
 function clone(exports) {
     function deepCopy(obj) {
         const ret = {};
-        for (const key in obj) {
-            if (Object.hasOwnProperty.call(obj, key)) {
-                const val = obj[key];
-                if (typeof val === 'object' && val !== null) {
-                    ret[key] = deepCopy(val);
-                } else {
-                    ret[key] = val;
-                }
+        for (const [key, val] of Object.entries(obj)) {
+            if (typeof val === 'object' && val !== null) {
+                ret[key] = deepCopy(val);
+            } else {
+                ret[key] = val;
             }
         }
         return ret;
