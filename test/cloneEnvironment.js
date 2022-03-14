@@ -22,61 +22,13 @@
 //  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-import { traverse } from '../src/estraverse.js';
+import { cloneEnvironment, traverse } from '../src/estraverse.js';
 
-describe('type API', function() {
-    it('for Property', function() {
-        const property = {
-            type: 'Property',
-            key: {
-                type: 'Identifier',
-                name: 'a'
-            },
-            value: {
-                type: 'Identifier',
-                name: 'a'
-            }
-        };
+describe('cloneEnvironment API', function() {
+    it('cloneEnvironment returns separate copies', function() {
+        const newEnv = cloneEnvironment();
 
-        const tree = {
-            type: 'ObjectExpression',
-            properties: [property]
-        };
-
-        return traverse(tree, {
-            enter(node) {
-                if (node === property) {
-                    expect(this.type()).to.be.equal('Property');
-                }
-            }
-        });
-    });
-
-    it('for Property without explicit type', function() {
-        const property = {
-            key: {
-                type: 'Identifier',
-                name: 'a'
-            },
-            value: {
-                type: 'Identifier',
-                name: 'a'
-            }
-        };
-
-        const tree = {
-            type: 'ObjectExpression',
-            properties: [property]
-        };
-
-        return traverse(tree, {
-            enter(node) {
-                if (node === property) {
-                    expect(this.type()).to.be.equal('Property');
-                }
-            }
-        });
+        expect(newEnv.traverse).to.be.a('function');
+        expect(newEnv.traverse).to.not.equal(traverse);
     });
 });
-
-// vim: set sw=4 ts=4 et tw=80 :

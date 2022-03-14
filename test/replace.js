@@ -124,6 +124,53 @@ describe('replace', function() {
         });
     });
 
+    it('sets node type for a property without `type: Property`, finding key and value', function() {
+        let tree = {
+            type: 'ObjectExpression',
+            properties: [{
+                key: {
+                    type: 'Identifier',
+                    name: 'a'
+                },
+                value: {
+                    type: 'ArrayExpression',
+                    elements: [
+                        { type: 'Literal', value: 1 },
+                        { type: 'Literal', value: 2 },
+                        { type: 'Literal', value: 3 },
+                        { type: 'Literal', value: 4 }
+                    ]
+                }
+            }]
+        };
+
+        tree = replace(tree, {
+            enter(node) {
+                if (node.type === 'Identifier' && node.name === 'a') {
+                    this.remove();
+                }
+                if (node.type === 'Literal' && node.value === 2) {
+                    return VisitorOption.Remove;
+                }
+            }
+        });
+
+        expect(tree).to.be.eql({
+            type: 'ObjectExpression',
+            properties: [{
+                key: null,
+                value: {
+                    type: 'ArrayExpression',
+                    elements: [
+                        { type: 'Literal', value: 1 },
+                        { type: 'Literal', value: 3 },
+                        { type: 'Literal', value: 4 }
+                    ]
+                }
+            }]
+        });
+    });
+
     it('can remove all nodes in an array in enter phase', function() {
         let tree = {
             type: 'ObjectExpression',
@@ -356,6 +403,120 @@ describe('replace', function() {
         });
     });
 
+    it('can break early in an array in leave phase', function() {
+        let tree = {
+            type: 'ObjectExpression',
+            properties: [{
+                type: 'Property',
+                key: {
+                    type: 'Identifier',
+                    name: 'a'
+                },
+                value: {
+                    type: 'ArrayExpression',
+                    elements: [
+                        { type: 'Literal', value: 1 },
+                        { type: 'Literal', value: 2 },
+                        { type: 'Literal', value: 3 },
+                        { type: 'Literal', value: 4 }
+                    ]
+                }
+            }]
+        };
+
+        tree = replace(tree, {
+            leave(node) {
+                if (node.type !== 'Literal') {
+                    return;
+                }
+                if (node.value === 2) {
+                    return this.remove();
+                }
+                if (node.value === 3) {
+                    return this.break();
+                }
+                if (node.value === 4) {
+                    return this.remove();
+                }
+            }
+        });
+
+        expect(tree).to.be.eql({
+            type: 'ObjectExpression',
+            properties: [{
+                type: 'Property',
+                key: {
+                    type: 'Identifier',
+                    name: 'a'
+                },
+                value: {
+                    type: 'ArrayExpression',
+                    elements: [
+                        { type: 'Literal', value: 1 },
+                        { type: 'Literal', value: 3 },
+                        { type: 'Literal', value: 4 }
+                    ]
+                }
+            }]
+        });
+    });
+
+    it('can replace with a specific item in an array in leave phase', function() {
+        let tree = {
+            type: 'ObjectExpression',
+            properties: [{
+                type: 'Property',
+                key: {
+                    type: 'Identifier',
+                    name: 'a'
+                },
+                value: {
+                    type: 'ArrayExpression',
+                    elements: [
+                        { type: 'Literal', value: 1 },
+                        { type: 'Literal', value: 2 },
+                        { type: 'Literal', value: 3 },
+                        { type: 'Literal', value: 4 }
+                    ]
+                }
+            }]
+        };
+
+        tree = replace(tree, {
+            leave(node) {
+                if (node.type !== 'Literal') {
+                    return;
+                }
+                if (node.value === 2) {
+                    return null;
+                }
+                if (node.value === 3) {
+                    return {};
+                }
+            }
+        });
+
+        expect(tree).to.be.eql({
+            type: 'ObjectExpression',
+            properties: [{
+                type: 'Property',
+                key: {
+                    type: 'Identifier',
+                    name: 'a'
+                },
+                value: {
+                    type: 'ArrayExpression',
+                    elements: [
+                        { type: 'Literal', value: 1 },
+                        null,
+                        {},
+                        { type: 'Literal', value: 4 }
+                    ]
+                }
+            }]
+        });
+    });
+
     it('respects skip', function() {
         let tree = {
             type: 'ObjectExpression',
@@ -387,6 +548,46 @@ describe('replace', function() {
                 switch (node.type) {
                     case 'ObjectExpression':
                         return VisitorOption.Skip;
+                    case 'BinaryExpression':
+                        return VisitorOption.Remove;
+                }
+            }
+        });
+
+        expect(tree).to.be.eql(old);
+    });
+
+    it('respects skip (skip())', function() {
+        let tree = {
+            type: 'ObjectExpression',
+            properties: [{
+                type: 'Property',
+                key: {
+                    type: 'Identifier',
+                    name: 'a'
+                },
+                value: {
+                    type: 'BinaryExpression',
+                    operator: '*',
+                    left: {
+                        type: 'Literal',
+                        value: 2
+                    },
+                    right: {
+                        type: 'Literal',
+                        value: 3
+                    }
+                }
+            }]
+        };
+
+        const old = JSON.parse(JSON.stringify(tree));
+
+        tree = replace(tree, {
+            enter(node) {
+                switch (node.type) {
+                    case 'ObjectExpression':
+                        return this.skip();
                     case 'BinaryExpression':
                         return VisitorOption.Remove;
                 }
@@ -446,7 +647,177 @@ describe('replace', function() {
         });
     });
 
-    it('throw unkown node type error when unknown nodes', function() {
+    it('can break early', function() {
+        let tree = {
+            type: 'XXXExpression',
+            properties: [{
+                type: 'Property',
+                key: {
+                    type: 'Identifier',
+                    name: 'a'
+                },
+                value: {
+                    type: 'ArrayExpression',
+                    elements: [
+                        { type: 'Literal', value: 1 },
+                        { type: 'Literal', value: 2 },
+                        { type: 'Literal', value: 3 },
+                        { type: 'Literal', value: 4 }
+                    ]
+                }
+            }]
+        };
+
+        tree = replace(tree, {
+            enter(node) {
+                if (node.type !== 'Literal') {
+                    return;
+                }
+                if (node.value === 2) {
+                    return VisitorOption.Remove;
+                }
+                if (node.value === 3) {
+                    return VisitorOption.Break;
+                }
+                if (node.value === 4) {
+                    return VisitorOption.Remove;
+                }
+            },
+            fallback: 'iteration'
+        });
+
+        expect(tree).to.be.eql({
+            type: 'XXXExpression',
+            properties: [{
+                type: 'Property',
+                key: {
+                    type: 'Identifier',
+                    name: 'a'
+                },
+                value: {
+                    type: 'ArrayExpression',
+                    elements: [
+                        { type: 'Literal', value: 1 },
+                        { type: 'Literal', value: 3 },
+                        { type: 'Literal', value: 4 }
+                    ]
+                }
+            }]
+        });
+    });
+
+    it('can break early (with `break()` call)', function() {
+        let tree = {
+            type: 'XXXExpression',
+            properties: [{
+                type: 'Property',
+                key: {
+                    type: 'Identifier',
+                    name: 'a'
+                },
+                value: {
+                    type: 'ArrayExpression',
+                    elements: [
+                        { type: 'Literal', value: 1 },
+                        { type: 'Literal', value: 2 },
+                        { type: 'Literal', value: 3 },
+                        { type: 'Literal', value: 4 }
+                    ]
+                }
+            }]
+        };
+
+        tree = replace(tree, {
+            enter(node) {
+                if (node.type !== 'Literal') {
+                    return;
+                }
+                if (node.value === 2) {
+                    return VisitorOption.Remove;
+                }
+                if (node.value === 3) {
+                    this.break();
+                }
+                if (node.value === 4) {
+                    return VisitorOption.Remove;
+                }
+            },
+            fallback: 'iteration'
+        });
+
+        expect(tree).to.be.eql({
+            type: 'XXXExpression',
+            properties: [{
+                type: 'Property',
+                key: {
+                    type: 'Identifier',
+                    name: 'a'
+                },
+                value: {
+                    type: 'ArrayExpression',
+                    elements: [
+                        { type: 'Literal', value: 1 },
+                        { type: 'Literal', value: 3 },
+                        { type: 'Literal', value: 4 }
+                    ]
+                }
+            }]
+        });
+    });
+
+    it('avoids replacing empty elements or items with missing properties', function() {
+        let tree = {
+            type: 'XXXExpression',
+            properties: [{
+                type: 'Property',
+                key: {
+                    type: 'Identifier',
+                    name: 'a'
+                },
+                value: {
+                    type: 'ArrayExpression',
+                    elements: [
+                        { type: 'Literal', value: 1 },
+                        { type: 'Literal', value: 2 },
+                        null,
+                        {},
+                        { type: 'ArrayExpression' }
+                    ]
+                }
+            }]
+        };
+
+        tree = replace(tree, {
+            enter(node) {
+                if (node.type === 'Identifier' && node.name === 'a') {
+                    this.remove();
+                }
+                if (node.type === 'Literal' && node.value === 2) {
+                    return VisitorOption.Remove;
+                }
+            },
+            fallback: 'iteration'
+        });
+
+        expect(tree).to.be.eql({
+            type: 'XXXExpression',
+            properties: [{
+                type: 'Property',
+                key: null,
+                value: {
+                    type: 'ArrayExpression',
+                    elements: [
+                        { type: 'Literal', value: 1 },
+                        null,
+                        {},
+                        { type: 'ArrayExpression' }
+                    ]
+                }
+            }]
+        });
+    });
+
+    it('throw unknown node type error when unknown nodes', function() {
         const tree = {
             type: 'XXXExpression',
             properties: [{

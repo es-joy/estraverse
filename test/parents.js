@@ -24,18 +24,34 @@
 
 import { traverse } from '../src/estraverse.js';
 
-describe('type API', function() {
+describe('parents API', function() {
     it('for Property', function() {
+        const innerProperty = {
+            type: 'Property',
+            key: {
+                type: 'Identifier',
+                name: 'b'
+            },
+            value: {
+                type: 'Identifier',
+                name: 'c'
+            }
+        };
+
+        const innerObject = {
+            type: 'ObjectExpression',
+            properties: [
+                innerProperty
+            ]
+        };
+
         const property = {
             type: 'Property',
             key: {
                 type: 'Identifier',
                 name: 'a'
             },
-            value: {
-                type: 'Identifier',
-                name: 'a'
-            }
+            value: innerObject
         };
 
         const tree = {
@@ -45,34 +61,8 @@ describe('type API', function() {
 
         return traverse(tree, {
             enter(node) {
-                if (node === property) {
-                    expect(this.type()).to.be.equal('Property');
-                }
-            }
-        });
-    });
-
-    it('for Property without explicit type', function() {
-        const property = {
-            key: {
-                type: 'Identifier',
-                name: 'a'
-            },
-            value: {
-                type: 'Identifier',
-                name: 'a'
-            }
-        };
-
-        const tree = {
-            type: 'ObjectExpression',
-            properties: [property]
-        };
-
-        return traverse(tree, {
-            enter(node) {
-                if (node === property) {
-                    expect(this.type()).to.be.equal('Property');
+                if (node === innerProperty) {
+                    expect(this.parents()).to.deep.equal([tree, property, innerObject]);
                 }
             }
         });

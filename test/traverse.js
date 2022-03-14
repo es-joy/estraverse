@@ -141,6 +141,43 @@ describe('object expression', function() {
             leave - Property
         `);
     });
+
+    it('Break on entry', function() {
+        const tree = {
+            type: 'ObjectExpression',
+            properties: [{
+                type: 'Property',
+                key: {
+                    type: 'Identifier',
+                    name: 'a'
+                },
+                value: {
+                    $enter: 'Break',
+                    type: 'ObjectExpression',
+                    properties: [{
+                        type: 'Property',
+                        key: {
+                            type: 'Identifier',
+                            name: 'a'
+                        },
+                        value: {
+                            type: 'Identifier',
+                            name: 'a'
+                        }
+                    }]
+                },
+                $leave: 'Break'
+            }]
+        };
+
+        checkDump(Dumper.dump(tree), `
+            enter - ObjectExpression
+            enter - Property
+            enter - Identifier
+            leave - Identifier
+            enter - ObjectExpression
+        `);
+    });
 });
 
 describe('object pattern', function() {
@@ -344,6 +381,54 @@ describe('function expression', function() {
             leave - FunctionExpression
         `);
     });
+
+    it('traverse (with non-Node object)', function() {
+        const tree = {
+            type: 'FunctionExpression',
+            params: [
+                {
+                    type: 'AssignmentPattern',
+                    left: {
+                        type: 'Identifier',
+                        name: 'a'
+                    },
+                    right: {
+                        type: 'Literal',
+                        value: 20
+                    }
+                },
+                {
+                    type: 'RestElement',
+                    argument: {
+                        type: 'Identifier',
+                        name: 'rest'
+                    }
+                },
+                {} // Non-Node object
+            ],
+            body: {
+                type: 'BlockStatement',
+                body: []
+            }
+        };
+
+        checkDump(Dumper.dump(tree), `
+            enter - FunctionExpression
+            enter - AssignmentPattern
+            enter - Identifier
+            leave - Identifier
+            enter - Literal
+            leave - Literal
+            leave - AssignmentPattern
+            enter - RestElement
+            enter - Identifier
+            leave - Identifier
+            leave - RestElement
+            enter - BlockStatement
+            leave - BlockStatement
+            leave - FunctionExpression
+        `);
+    });
 });
 
 describe('function declaration', function() {
@@ -523,6 +608,29 @@ describe('no listed keys fallback', function() {
             leave - Identifier
             enter - BlockStatement
             leave - BlockStatement
+            leave - TestStatement
+        `);
+    });
+
+    it('traverses with null item', function() {
+        const tree = {
+            type: 'TestStatement',
+            id: {
+                type: 'Identifier',
+                name: 'decl'
+            },
+            params: [{
+                type: 'Identifier',
+                name: 'a'
+            }, null]
+        };
+
+        checkDump(Dumper.dump(tree, null, 'iteration'), `
+            enter - TestStatement
+            enter - Identifier
+            leave - Identifier
+            enter - Identifier
+            leave - Identifier
             leave - TestStatement
         `);
     });

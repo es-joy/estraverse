@@ -62,7 +62,7 @@ function clone(exports) {
         ArrayExpression: 'ArrayExpression',
         ArrayPattern: 'ArrayPattern',
         ArrowFunctionExpression: 'ArrowFunctionExpression',
-        AwaitExpression: 'AwaitExpression', // CAUTION: It's deferred to ES7.
+        AwaitExpression: 'AwaitExpression', // ES7.
         BlockStatement: 'BlockStatement',
         BinaryExpression: 'BinaryExpression',
         BreakStatement: 'BreakStatement',
@@ -140,7 +140,7 @@ function clone(exports) {
         ArrayExpression: ['elements'],
         ArrayPattern: ['elements'],
         ArrowFunctionExpression: ['params', 'body'],
-        AwaitExpression: ['argument'], // CAUTION: It's deferred to ES7.
+        AwaitExpression: ['argument'], // ES7.
         BlockStatement: ['body'],
         BinaryExpression: ['left', 'right'],
         BreakStatement: ['label'],
@@ -254,6 +254,7 @@ function clone(exports) {
     }
 
     function isNode(node) {
+        /* c8 ignore next 3 */
         if (node == null) {
             return false;
         }
@@ -458,7 +459,6 @@ function clone(exports) {
                                 if (candidateExistsInLeaveList(leavelist, candidate[current2])) {
                                     continue;
                                 }
-
                                 if (isProperty(nodeType, candidates[current])) {
                                     element = new Element(candidate[current2], [key, current2], 'Property', null);
                                 } else if (isNode(candidate[current2])) {
@@ -496,7 +496,7 @@ function clone(exports) {
                     while (i--) {
                         nextElem = worklist[i];
                         if (nextElem.ref && nextElem.ref.parent === parent) {
-                            if  (nextElem.ref.key < key) {
+                            if (nextElem.ref.key < key) {
                                 break;
                             }
                             --nextElem.ref.key;
