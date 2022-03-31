@@ -280,4 +280,306 @@ function a (b) {}
             type: 'Program'
         });
     });
+
+    it('attaches `trailingComments` with tokens array and comment range greater than existing token', function() {
+        const options = {
+            comment: true,
+            range: true,
+            loc: false,
+            tokens: true,
+            raw: false
+        };
+
+        let tree = esprima.parse(`
+/**
+ * @param {string} b
+ */
+function a (b) {}
+`, options);
+        tree = attachComments(tree, [
+            {
+                type: 'Line', value: ' Single comment', range: [100, 117]
+            }
+        ], tree.tokens);
+
+        expect(tree).to.deep.equal({
+            body: [
+                {
+                    async: false,
+                    body: {
+                        body: [],
+                        range: [
+                            45,
+                            47
+                        ],
+                        trailingComments: [
+                            {
+                                extendedRange: [
+                                    47,
+                                    117
+                                ],
+                                range: {
+                                    0: 100,
+                                    1: 117
+                                },
+                                type: 'Line',
+                                value: ' Single comment'
+                            }
+                        ],
+                        type: 'BlockStatement'
+                    },
+                    expression: false,
+                    generator: false,
+                    id: {
+                        name: 'a',
+                        range: [
+                            39,
+                            40
+                        ],
+                        type: 'Identifier'
+                    },
+                    params: [
+                        {
+                            name: 'b',
+                            range: [
+                                42,
+                                43
+                            ],
+                            type: 'Identifier'
+                        }
+                    ],
+                    range: [
+                        30,
+                        47
+                    ],
+                    type: 'FunctionDeclaration'
+                }
+            ],
+            comments: [
+                {
+                    range: [
+                        1,
+                        29
+                    ],
+                    type: 'Block',
+                    value: '*\n * @param {string} b\n '
+                }
+            ],
+            range: [
+                30,
+                47
+            ],
+            sourceType: 'script',
+            tokens: [
+                {
+                    range: [
+                        30,
+                        38
+                    ],
+                    type: 'Keyword',
+                    value: 'function'
+                },
+                {
+                    range: [
+                        39,
+                        40
+                    ],
+                    type: 'Identifier',
+                    value: 'a'
+                },
+                {
+                    range: [
+                        41,
+                        42
+                    ],
+                    type: 'Punctuator',
+                    value: '('
+                },
+                {
+                    range: [
+                        42,
+                        43
+                    ],
+                    type: 'Identifier',
+                    value: 'b'
+                },
+                {
+                    range: [
+                        43,
+                        44
+                    ],
+                    type: 'Punctuator',
+                    value: ')'
+                },
+                {
+                    range: [
+                        45,
+                        46
+                    ],
+                    type: 'Punctuator',
+                    value: '{'
+                },
+                {
+                    range: [
+                        46,
+                        47
+                    ],
+                    type: 'Punctuator',
+                    value: '}'
+                }
+            ],
+            type: 'Program'
+        });
+    });
+
+    it('attaches `trailingComments` with tokens array and comment range less than existing token', function() {
+        const options = {
+            comment: true,
+            range: true,
+            loc: false,
+            tokens: true,
+            raw: false
+        };
+
+        let tree = esprima.parse(`
+/**
+ * @param {string} b
+ */
+function a (b) {}
+`, options);
+        tree = attachComments(tree, [
+            {
+                type: 'Line', value: ' Single comment', range: [100, 17]
+            }
+        ], tree.tokens);
+
+        expect(tree).to.deep.equal({
+            body: [
+                {
+                    async: false,
+                    body: {
+                        body: [],
+                        range: [
+                            45,
+                            47
+                        ],
+                        trailingComments: [
+                            {
+                                extendedRange: [
+                                    47,
+                                    17
+                                ],
+                                range: {
+                                    0: 100,
+                                    1: 17
+                                },
+                                type: 'Line',
+                                value: ' Single comment'
+                            }
+                        ],
+                        type: 'BlockStatement'
+                    },
+                    expression: false,
+                    generator: false,
+                    id: {
+                        name: 'a',
+                        range: [
+                            39,
+                            40
+                        ],
+                        type: 'Identifier'
+                    },
+                    params: [
+                        {
+                            name: 'b',
+                            range: [
+                                42,
+                                43
+                            ],
+                            type: 'Identifier'
+                        }
+                    ],
+                    range: [
+                        30,
+                        47
+                    ],
+                    type: 'FunctionDeclaration'
+                }
+            ],
+            comments: [
+                {
+                    range: [
+                        1,
+                        29
+                    ],
+                    type: 'Block',
+                    value: '*\n * @param {string} b\n '
+                }
+            ],
+            range: [
+                30,
+                47
+            ],
+            sourceType: 'script',
+            tokens: [
+                {
+                    range: [
+                        30,
+                        38
+                    ],
+                    type: 'Keyword',
+                    value: 'function'
+                },
+                {
+                    range: [
+                        39,
+                        40
+                    ],
+                    type: 'Identifier',
+                    value: 'a'
+                },
+                {
+                    range: [
+                        41,
+                        42
+                    ],
+                    type: 'Punctuator',
+                    value: '('
+                },
+                {
+                    range: [
+                        42,
+                        43
+                    ],
+                    type: 'Identifier',
+                    value: 'b'
+                },
+                {
+                    range: [
+                        43,
+                        44
+                    ],
+                    type: 'Punctuator',
+                    value: ')'
+                },
+                {
+                    range: [
+                        45,
+                        46
+                    ],
+                    type: 'Punctuator',
+                    value: '{'
+                },
+                {
+                    range: [
+                        46,
+                        47
+                    ],
+                    type: 'Punctuator',
+                    value: '}'
+                }
+            ],
+            type: 'Program'
+        });
+    });
 });

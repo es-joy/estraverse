@@ -456,6 +456,7 @@ function clone(exports) {
                                     continue;
                                 }
 
+                                /* c8 ignore next 3*/
                                 if (candidateExistsInLeaveList(leavelist, candidate[current2])) {
                                     continue;
                                 }
@@ -686,6 +687,7 @@ function clone(exports) {
 
                 while (cursor < comments.length) {
                     comment = comments[cursor];
+
                     if (comment.extendedRange[1] > node.range[0]) {
                         break;
                     }
