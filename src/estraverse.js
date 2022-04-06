@@ -456,7 +456,7 @@ function clone(exports) {
                                     continue;
                                 }
 
-                                /* c8 ignore next 3*/
+                                /* c8 ignore next 3 */
                                 if (candidateExistsInLeaveList(leavelist, candidate[current2])) {
                                     continue;
                                 }
