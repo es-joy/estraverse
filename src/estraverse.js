@@ -497,6 +497,8 @@ function clone(exports) {
                     while (i--) {
                         nextElem = worklist[i];
                         if (nextElem.ref && nextElem.ref.parent === parent) {
+                            // Unsure how to replicate; remove if not needed
+                            /* c8 ignore next 3 */
                             if (nextElem.ref.key < key) {
                                 break;
                             }
@@ -731,6 +733,8 @@ function clone(exports) {
                         }
                         node.trailingComments.push(comment);
                         comments.splice(cursor, 1);
+                    // Unsure how to replicate; remove if not needed
+                    /* c8 ignore next 3 */
                     } else {
                         cursor += 1;
                     }

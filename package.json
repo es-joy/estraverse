@@ -49,6 +49,7 @@
   },
   "license": "BSD-2-Clause",
   "c8": {
+    "checkCoverage": true,
     "branches": 100,
     "lines": 100,
     "functions": 100,
