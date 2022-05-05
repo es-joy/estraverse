@@ -23,12 +23,50 @@
   THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+/**
+ * @typedef {import('acorn')} acorn
+ * @typedef {import('estree').SourceLocation} SourceLocation
+ * @typedef {import('estree').Node} Node
+ * @typedef {import('estree').Comment} Comment
+ * @typedef {number} int
+ */
+
+/**
+ * @typedef {{
+ *   extendedRange?: [int, int]
+ * } & Comment} ExtendedComment
+ */
+
+/**
+ * @typedef {Object<string, string>} Syntax
+ */
+
+/**
+ * @param {EstraverseExports} exports
+ * @returns {EstraverseExports}
+ */
 function clone(exports) {
+    /**
+     * @typedef {object} EstraverseExports
+     * @property {Syntax} [Syntax]
+     * @property {traverse} [traverse]
+     * @property {replace} [replace]
+     * @property {attachComments} [attachComments]
+     * @property {VisitorKeys} [VisitorKeys]
+     * @property {VisitorOption} [VisitorOption]
+     * @property {Controller} [Controller]
+     * @property {cloneEnvironment} [cloneEnvironment]
+     */
+
+    /**
+     * @param {Object<string, any>} obj
+     * @returns {Object<string, any>}
+     */
     function deepCopy(obj) {
-        const ret = {};
+        const ret = /** @type {Object<string, any>} */ ({});
         for (const [key, val] of Object.entries(obj)) {
             if (typeof val === 'object' && val !== null) {
-                ret[key] = deepCopy(val);
+                ret[key] = deepCopy(/** @type {any} */ (val));
             } else {
                 ret[key] = val;
             }
@@ -39,6 +77,10 @@ function clone(exports) {
     // based on LLVM libc++ upper_bound / lower_bound
     // MIT License
 
+    /**
+     * @param {EsprimaToken[]} array
+     * @param {(token: EsprimaToken) => boolean} func
+     */
     function upperBound(array, func) {
         let len = array.length;
         let i = 0;
@@ -224,15 +266,26 @@ function clone(exports) {
     };
 
     class Reference {
+        /**
+         * @param {Node} parent
+         * @param {number|string} key
+         */
         constructor (parent, key) {
             this.parent = parent;
             this.key = key;
         }
 
+        /**
+         * @param {Node|null} node
+         * @returns {void}
+         */
         replace (node) {
             this.parent[this.key] = node;
         }
 
+        /**
+         * @returns {boolean}
+         */
         remove () {
             if (Array.isArray(this.parent)) {
                 this.parent.splice(this.key, 1);
@@ -245,6 +298,12 @@ function clone(exports) {
     }
 
     class Element {
+        /**
+         * @param {null|Node} node
+         * @param {null|string[]} path
+         * @param {"Property"|null} wrap
+         * @param {Reference|null} ref
+         */
         constructor (node, path, wrap, ref) {
             this.node = node;
             this.path = path;
@@ -253,6 +312,9 @@ function clone(exports) {
         }
     }
 
+    /**
+     * @param {any} node
+     */
     function isNode(node) {
         /* c8 ignore next 3 */
         if (node == null) {
@@ -261,6 +323,11 @@ function clone(exports) {
         return typeof node === 'object' && typeof node.type === 'string';
     }
 
+    /**
+     * @param {string} nodeType
+     * @param {string} key
+     * @returns {boolean}
+     */
     function isProperty(nodeType, key) {
         return (nodeType === Syntax.ObjectExpression || nodeType === Syntax.ObjectPattern) && 'properties' === key;
     }
@@ -329,6 +396,17 @@ function clone(exports) {
             return this.__current.node;
         }
 
+        /**
+         * @callback VisitorCallback
+         * @param {Node} node
+         * @param {Node} parent
+         */
+
+        /**
+         * @param {VisitorCallback} callback
+         * @param {Element} element
+         * @returns {undefined|Node|object} Object == skip, break, or replace
+         */
         __execute (callback, element) {
             const previous = this.__current;
             this.__current = element;
@@ -367,6 +445,23 @@ function clone(exports) {
             this.notify(REMOVE);
         }
 
+        constructor () {
+            // `object` is the sentinel
+            /** @type {Element[]|object} */
+            this.__worklist;
+
+            /** @type {Element[]} */
+            this.__leavelist;
+
+            /** @type {Element|null} */
+            this.__current;
+        }
+
+        /**
+         * @param {Node} root
+         * @param {} visitor
+         * @returns {void}
+         */
         __initialize (root, visitor) {
             this.visitor = visitor;
             this.root = root;
@@ -387,6 +482,11 @@ function clone(exports) {
             }
         }
 
+        /**
+         * @param {Node} root
+         * @param {} visitor
+         * @returns {void}
+         */
         traverse (root, visitor) {
             this.__initialize(root, visitor);
 
@@ -481,6 +581,11 @@ function clone(exports) {
             }
         }
 
+        /**
+         * @param {Node} root
+         * @param {} visitor
+         * @returns {void}
+         */
         replace (root, visitor) {
             function removeElem(element) {
                 let i,
@@ -556,7 +661,7 @@ function clone(exports) {
                 if (target !== undefined && target !== BREAK && target !== SKIP && target !== REMOVE) {
                     // replace
                     element.ref.replace(target);
-                    element.node = target;
+                    element.node = /** @type {Node} */ (target);
                 }
 
                 if (this.__state === REMOVE || target === REMOVE) {
@@ -655,10 +760,30 @@ function clone(exports) {
         return comment;
     }
 
+    /**
+    * @typedef {{
+    *   value: any;
+    *   start?: number;
+    *   end?: number;
+    *   loc?: SourceLocation;
+    *   range?: [number, number];
+    *   regex?: {flags: string, pattern: string};
+    * }} BaseEsprimaToken
+    *
+    * @typedef {{
+    *   type: string;
+    * } & BaseEsprimaToken} EsprimaToken
+    */
+
+    /**
+     * @param {Node} tree
+     * @param {ExtendedComment[]} providedComments
+     * @param {EsprimaToken[]} tokens
+     */
     function attachComments(tree, providedComments, tokens) {
         // At first, we should calculate extended comment ranges.
-        const comments = [];
-        let comment, cursor;
+        const comments = /** @type {ExtendedComment[]} */ ([]);
+        let comment;
 
         if (!tree.range) {
             throw new Error('attachComments needs range information');
@@ -670,7 +795,7 @@ function clone(exports) {
                 for (const providedComment of providedComments) {
                     comment = deepCopy(providedComment);
                     comment.extendedRange = [0, tree.range[0]];
-                    comments.push(comment);
+                    comments.push(/** @type {ExtendedComment} */ (comment));
                 }
                 tree.leadingComments = comments;
             }
@@ -682,7 +807,7 @@ function clone(exports) {
         }
 
         // This is based on John Freeman's implementation.
-        cursor = 0;
+        let cursor = 0;
         traverse(tree, {
             enter (node) {
                 let comment;
@@ -754,6 +879,8 @@ function clone(exports) {
         return tree;
     }
 
+    function cloneEnvironment () { return clone({}); }
+
     exports.Syntax = Syntax;
     exports.traverse = traverse;
     exports.replace = replace;
@@ -761,7 +888,7 @@ function clone(exports) {
     exports.VisitorKeys = VisitorKeys;
     exports.VisitorOption = VisitorOption;
     exports.Controller = Controller;
-    exports.cloneEnvironment = function () { return clone({}); };
+    exports.cloneEnvironment = cloneEnvironment;
 
     return exports;
 }
