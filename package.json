@@ -6,6 +6,7 @@
   "type": "module",
   "main": "./dist/estraverse.min.js",
   "exports": {
+    "types": "./dist/estraverse.d.ts",
     "import": "./dist/estraverse.esm.min.js",
     "require": "./dist/estraverse.min.js"
   },
@@ -32,20 +33,24 @@
     "type": "git",
     "url": "http://github.com/es-joy/estraverse.git"
   },
-  "dependencies": {},
   "devDependencies": {
-    "@babel/core": "^7.17.9",
-    "@babel/preset-env": "^7.16.11",
-    "@babel/register": "^7.17.7",
-    "@rollup/plugin-babel": "^5.3.1",
-    "c8": "^7.11.0",
-    "chai": "^4.3.6",
-    "eslint": "^8.12.0",
-    "espree": "^9.3.1",
+    "@babel/core": "^7.25.2",
+    "@babel/preset-env": "^7.25.4",
+    "@babel/register": "^7.24.6",
+    "@rollup/plugin-babel": "^6.0.4",
+    "@rollup/plugin-terser": "^0.4.4",
+    "@stylistic/eslint-plugin": "^2.8.0",
+    "@types/estree": "^1.0.6",
+    "acorn": "^8.12.1",
+    "c8": "^10.1.2",
+    "chai": "^5.1.1",
+    "eslint": "^9.11.1",
+    "espree": "^10.2.0",
     "esprima": "^4.0.1",
-    "mocha": "^9.2.2",
-    "rollup": "^2.70.1",
-    "rollup-plugin-terser": "^7.0.2"
+    "globals": "^15.9.0",
+    "mocha": "^10.7.3",
+    "rollup": "^4.22.5",
+    "typescript": "^5.6.2"
   },
   "license": "BSD-2-Clause",
   "c8": {
@@ -63,7 +68,8 @@
     ]
   },
   "scripts": {
-    "build": "rollup -c",
+    "tsc": "tsc",
+    "build": "rollup -c && npm run tsc",
     "test": "npm run lint && npm run unit-test",
     "lint": "eslint .",
     "unit-test": "c8 mocha --require chai/register-expect.js --require @babel/register"

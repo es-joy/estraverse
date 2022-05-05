@@ -23,12 +23,73 @@
   THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+/**
+ * @typedef {import('acorn')} acorn
+ * @typedef {import('estree').SourceLocation} SourceLocation
+ * @typedef {import('estree').Node} Node
+ * @typedef {import('estree').Comment} Comment
+ * @typedef {number} int
+ */
+
+/**
+ * @typedef {{
+ *   extendedRange: [int, int],
+ *   range: [number, number]
+ * } & Comment} ExtendedComment
+ */
+
+/**
+ * @typedef {Object<string, string>} Syntax
+ */
+
+/**
+ * @typedef {Node & {
+ *   range: [number, number]
+ * }} NodeWithRange
+ */
+
+/**
+ * @callback VisitorCallback
+ * @param {NodeWithRange} node
+ * @param {Node} parent
+ * @returns {Node|object|undefined}
+ */
+
+/**
+ * @typedef {{
+ *   leave?: VisitorCallback,
+ *   enter?: VisitorCallback,
+ *   fallback?: "iteration" | ((obj: object) => string[]),
+ *   keys?: {[key: string]: string[]}
+ * }} Visitor
+ */
+
+/**
+ * @param {EstraverseExports} exports
+ * @returns {EstraverseExports}
+ */
 function clone(exports) {
+    /**
+     * @typedef {object} EstraverseExports
+     * @property {Syntax} [Syntax]
+     * @property {traverse} [traverse]
+     * @property {replace} [replace]
+     * @property {attachComments} [attachComments]
+     * @property {VisitorKeys} [VisitorKeys]
+     * @property {VisitorOption} [VisitorOption]
+     * @property {typeof Controller} [Controller]
+     * @property {cloneEnvironment} [cloneEnvironment]
+     */
+
+    /**
+     * @param {Object<string, any>} obj
+     * @returns {Object<string, any>}
+     */
     function deepCopy(obj) {
-        const ret = {};
+        const ret = /** @type {Object<string, any>} */ ({});
         for (const [key, val] of Object.entries(obj)) {
             if (typeof val === 'object' && val !== null) {
-                ret[key] = deepCopy(val);
+                ret[key] = deepCopy(/** @type {any} */ (val));
             } else {
                 ret[key] = val;
             }
@@ -39,6 +100,10 @@ function clone(exports) {
     // based on LLVM libc++ upper_bound / lower_bound
     // MIT License
 
+    /**
+     * @param {EsprimaToken[]} array
+     * @param {(token: EsprimaToken) => boolean} func
+     */
     function upperBound(array, func) {
         let len = array.length;
         let i = 0;
@@ -224,18 +289,30 @@ function clone(exports) {
     };
 
     class Reference {
+        /**
+         * @param {Node | (Node|null)[] | {root: Node}} parent
+         * @param {number|string} key
+         */
         constructor (parent, key) {
             this.parent = parent;
             this.key = key;
         }
 
+        /**
+         * @param {Node|null} node
+         * @returns {void}
+         */
         replace (node) {
+            // @ts-expect-error Can be a Node on any of `parent` types
             this.parent[this.key] = node;
         }
 
+        /**
+         * @returns {boolean}
+         */
         remove () {
             if (Array.isArray(this.parent)) {
-                this.parent.splice(this.key, 1);
+                this.parent.splice(/** @type {number} */ (this.key), 1);
                 return true;
             } else {
                 this.replace(null);
@@ -245,6 +322,17 @@ function clone(exports) {
     }
 
     class Element {
+        node;
+        path;
+        wrap;
+        ref;
+
+        /**
+         * @param {null|NodeWithRange} node
+         * @param {null|[string, number]|string} path
+         * @param {"Property"|null} wrap
+         * @param {Reference|null} ref
+         */
         constructor (node, path, wrap, ref) {
             this.node = node;
             this.path = path;
@@ -253,6 +341,9 @@ function clone(exports) {
         }
     }
 
+    /**
+     * @param {any} node
+     */
     function isNode(node) {
         /* c8 ignore next 3 */
         if (node == null) {
@@ -261,10 +352,19 @@ function clone(exports) {
         return typeof node === 'object' && typeof node.type === 'string';
     }
 
+    /**
+     * @param {string} nodeType
+     * @param {string} key
+     * @returns {boolean}
+     */
     function isProperty(nodeType, key) {
         return (nodeType === Syntax.ObjectExpression || nodeType === Syntax.ObjectPattern) && 'properties' === key;
     }
 
+    /**
+     * @param {Element[]} leavelist
+     * @param {Node|NodeWithRange[]} candidate
+     */
     function candidateExistsInLeaveList(leavelist, candidate) {
         for (let i = leavelist.length - 1; i >= 0; --i) {
             if (leavelist[i].node === candidate) {
@@ -279,6 +379,10 @@ function clone(exports) {
         // API:
         // return property path array from root to current node
         path () {
+            /**
+             * @param {(string|null|number)[]} result
+             * @param {string|[string, number]|null} path
+             */
             function addToPath(result, path) {
                 if (Array.isArray(path)) {
                     for (const p of path) {
@@ -290,25 +394,25 @@ function clone(exports) {
             }
 
             // root node
-            if (!this.__current.path) {
+            if (!(/** @type {Element} */(this.__current)).path) {
                 return null;
             }
 
             // first node is sentinel, second node is root element
-            const result = [];
+            const result = /** @type {(string|null)[]} */ ([]);
             for (let i = 2, iz = this.__leavelist.length; i < iz; ++i) {
                 const element = this.__leavelist[i];
                 addToPath(result, element.path);
             }
-            addToPath(result, this.__current.path);
+            addToPath(result, /** @type {Element} */ (this.__current).path);
             return result;
         }
 
         // API:
         // return type of current node
         type () {
-            const node = this.current();
-            return node.type || this.__current.wrap;
+            const node = /** @type {Node} */ (this.current());
+            return node.type || /** @type {Element} */ (this.__current).wrap;
         }
 
         // API:
@@ -326,9 +430,14 @@ function clone(exports) {
         // API:
         // return current node
         current () {
-            return this.__current.node;
+            return /** @type {Element} */ (this.__current).node;
         }
 
+        /**
+         * @param {VisitorCallback|undefined} callback
+         * @param {Element} element
+         * @returns {undefined|Node|object} Object == skip, break, or replace
+         */
         __execute (callback, element) {
             const previous = this.__current;
             this.__current = element;
@@ -336,7 +445,12 @@ function clone(exports) {
 
             let result = undefined;
             if (callback) {
-                result = callback.call(this, element.node, this.__leavelist[this.__leavelist.length - 1].node);
+                result = callback.call(
+                    this,
+                    /** @type {NodeWithRange} */ (element.node),
+                    /** @type {Node} */
+                    (this.__leavelist[this.__leavelist.length - 1].node)
+                );
             }
             this.__current = previous;
 
@@ -344,29 +458,59 @@ function clone(exports) {
         }
 
         // API:
-        // notify control skip / break
+
+        /**
+         * notify control skip / break
+         * @param {object} flag
+         */
         notify (flag) {
             this.__state = flag;
         }
 
         // API:
-        // skip child nodes of current node
+        /**
+         * skip child nodes of current node
+         */
         skip () {
             this.notify(SKIP);
         }
 
         // API:
-        // break traversals
+        /**
+         * break traversals
+         */
         break () {
             this.notify(BREAK);
         }
 
         // API:
-        // remove node
+        /**
+         * remove node
+         */
         remove () {
             this.notify(REMOVE);
         }
 
+        /** @type {Element|null} */
+        __current = null;
+
+        constructor () {
+            // `object` is the sentinel
+            /** @type {(Element|object)[]} */
+            this.__worklist;
+
+            /** @type {Element[]} */
+            this.__leavelist;
+
+            /** @type {{[key: string]: string[]}} */
+            this.__keys;
+        }
+
+        /**
+         * @param {Node} root
+         * @param {Visitor} visitor
+         * @returns {void}
+         */
         __initialize (root, visitor) {
             this.visitor = visitor;
             this.root = root;
@@ -387,6 +531,11 @@ function clone(exports) {
             }
         }
 
+        /**
+         * @param {NodeWithRange} root
+         * @param {Visitor} visitor
+         * @returns {void}
+         */
         traverse (root, visitor) {
             this.__initialize(root, visitor);
 
@@ -401,13 +550,13 @@ function clone(exports) {
             leavelist.push(new Element(null, null, null, null));
 
             while (worklist.length) {
-                let element = worklist.pop();
+                let element = /** @type {object|Element} */ (worklist.pop());
 
                 let ret;
                 if (element === sentinel) {
-                    element = leavelist.pop();
+                    element = /** @type {Element} */ (leavelist.pop());
 
-                    ret = this.__execute(visitor.leave, element);
+                    ret = this.__execute(visitor.leave, /** @type {Element} */ (element));
 
                     if (this.__state === BREAK || ret === BREAK) {
                         return;
@@ -415,7 +564,7 @@ function clone(exports) {
                     continue;
                 }
 
-                if (element.node) {
+                if ('node' in element && element.node) {
 
                     ret = this.__execute(visitor.enter, element);
 
@@ -444,6 +593,8 @@ function clone(exports) {
                     let current = candidates.length;
                     while ((current -= 1) >= 0) {
                         const key = candidates[current];
+                        /** @type {Node|NodeWithRange[]} */
+                        // @ts-expect-error Any valid key of Nodes
                         const candidate = node[key];
                         if (!candidate) {
                             continue;
@@ -474,35 +625,44 @@ function clone(exports) {
                                 continue;
                             }
 
-                            worklist.push(new Element(candidate, key, null, null));
+                            worklist.push(
+                                new Element(
+                                    /** @type {NodeWithRange} */ (candidate),
+                                    key,
+                                    null,
+                                    null
+                                ));
                         }
                     }
                 }
             }
         }
 
+        /**
+         * @param {NodeWithRange} root
+         * @param {Visitor} visitor
+         * @returns {Node}
+         */
         replace (root, visitor) {
+            /**
+             * @param {Element} element
+             */
             function removeElem(element) {
-                let i,
-                    key,
-                    nextElem,
-                    parent;
-
-                if (element.ref.remove()) {
+                if (/** @type {Reference} */ (element.ref).remove()) {
                     // When the reference is an element of an array.
-                    ({ key, parent } = element.ref);
+                    const { key, parent } = /** @type {Reference} */ (element.ref);
 
                     // If removed from array, then decrease following items' keys.
-                    i = worklist.length;
+                    let i = worklist.length;
                     while (i--) {
-                        nextElem = worklist[i];
-                        if (nextElem.ref && nextElem.ref.parent === parent) {
+                        const nextElem = worklist[i];
+                        if ('ref' in nextElem && nextElem.ref && nextElem.ref.parent === parent) {
                             // Unsure how to replicate; remove if not needed
                             /* c8 ignore next 3 */
                             if (nextElem.ref.key < key) {
                                 break;
                             }
-                            --nextElem.ref.key;
+                            --(/** @type {number} */ (nextElem.ref.key));
                         }
                     }
                 }
@@ -520,27 +680,32 @@ function clone(exports) {
             const outer = {
                 root
             };
+            /** @type {Element|object} */
             let element = new Element(root, null, null, new Reference(outer, 'root'));
             worklist.push(element);
-            leavelist.push(element);
+            leavelist.push(/** @type {Element} */ (element));
 
             while (worklist.length) {
-                element = worklist.pop();
+                element = /** @type {object|Element} */ (worklist.pop());
 
                 if (element === sentinel) {
-                    element = leavelist.pop();
+                    element = /** @type {Element} */ (leavelist.pop());
 
-                    const target = this.__execute(visitor.leave, element);
+                    const target = this.__execute(visitor.leave, /** @type {Element} */ (element));
 
                     // node may be replaced with null,
                     // so distinguish between undefined and null in this place
                     if (target !== undefined && target !== BREAK && target !== SKIP && target !== REMOVE) {
                         // replace
-                        element.ref.replace(target);
+                        /** @type {Reference} */
+                        (/** @type {Element} */ (element).ref).replace(
+                            /** @type {Node} */
+                            (target)
+                        );
                     }
 
                     if (this.__state === REMOVE || target === REMOVE) {
-                        removeElem(element);
+                        removeElem(/** @type {Element} */ (element));
                     }
 
                     if (this.__state === BREAK || target === BREAK) {
@@ -549,19 +714,20 @@ function clone(exports) {
                     continue;
                 }
 
-                const target = this.__execute(visitor.enter, element);
+                const target = this.__execute(visitor.enter, /** @type {Element} */ (element));
 
                 // node may be replaced with null,
                 // so distinguish between undefined and null in this place
                 if (target !== undefined && target !== BREAK && target !== SKIP && target !== REMOVE) {
                     // replace
-                    element.ref.replace(target);
-                    element.node = target;
+                    /** @type {Reference} */
+                    (/** @type {Element} */ (element).ref).replace(/** @type {Node} */ (target));
+                    /** @type {Element} */ (element).node = /** @type {NodeWithRange} */ (target);
                 }
 
                 if (this.__state === REMOVE || target === REMOVE) {
-                    removeElem(element);
-                    element.node = null;
+                    removeElem(/** @type {Element} */ (element));
+                    /** @type {Element} */ (element).node = null;
                 }
 
                 if (this.__state === BREAK || target === BREAK) {
@@ -569,19 +735,19 @@ function clone(exports) {
                 }
 
                 // node may be null
-                const { node } = element;
+                const { node } = /** @type {Element} */ (element);
                 if (!node) {
                     continue;
                 }
 
                 worklist.push(sentinel);
-                leavelist.push(element);
+                leavelist.push(/** @type {Element} */ (element));
 
                 if (this.__state === SKIP || target === SKIP) {
                     continue;
                 }
 
-                const nodeType = node.type || element.wrap;
+                const nodeType = node.type || /** @type {Element} */ (element).wrap;
                 let candidates = this.__keys[nodeType];
                 if (!candidates) {
                     if (this.__fallback) {
@@ -594,6 +760,8 @@ function clone(exports) {
                 let current = candidates.length;
                 while ((current -= 1) >= 0) {
                     const key = candidates[current];
+
+                    // @ts-expect-error Any valid key of Nodes
                     const candidate = node[key];
                     if (!candidate) {
                         continue;
@@ -624,16 +792,28 @@ function clone(exports) {
         }
     }
 
+    /**
+     * @param {NodeWithRange} root
+     * @param {Visitor} visitor
+     */
     function traverse(root, visitor) {
         const controller = new Controller();
         return controller.traverse(root, visitor);
     }
 
+    /**
+     * @param {NodeWithRange} root
+     * @param {Visitor} visitor
+     */
     function replace(root, visitor) {
         const controller = new Controller();
         return controller.replace(root, visitor);
     }
 
+    /**
+     * @param {ExtendedComment} comment
+     * @param {EsprimaToken[]} tokens
+     */
     function extendCommentRange(comment, tokens) {
         let target;
 
@@ -655,10 +835,31 @@ function clone(exports) {
         return comment;
     }
 
+    /**
+    * @typedef {{
+    *   value: any;
+    *   start?: number;
+    *   end?: number;
+    *   loc?: SourceLocation;
+    *   range?: [number, number];
+    *   regex?: {flags: string, pattern: string};
+    * }} BaseEsprimaToken
+    *
+    * @typedef {{
+    *   type: string;
+    *   range: [number, number]
+    * } & BaseEsprimaToken} EsprimaToken
+    */
+
+    /**
+     * @param {NodeWithRange} tree
+     * @param {ExtendedComment[]} providedComments
+     * @param {EsprimaToken[]} tokens
+     */
     function attachComments(tree, providedComments, tokens) {
         // At first, we should calculate extended comment ranges.
-        const comments = [];
-        let comment, cursor;
+        const comments = /** @type {ExtendedComment[]} */ ([]);
+        let comment;
 
         if (!tree.range) {
             throw new Error('attachComments needs range information');
@@ -668,9 +869,9 @@ function clone(exports) {
         if (!tokens.length) {
             if (providedComments.length) {
                 for (const providedComment of providedComments) {
-                    comment = deepCopy(providedComment);
+                    comment = /** @type {ExtendedComment} */ (deepCopy(providedComment));
                     comment.extendedRange = [0, tree.range[0]];
-                    comments.push(comment);
+                    comments.push(/** @type {ExtendedComment} */ (comment));
                 }
                 tree.leadingComments = comments;
             }
@@ -678,11 +879,15 @@ function clone(exports) {
         }
 
         for (const providedComment of providedComments) {
-            comments.push(extendCommentRange(deepCopy(providedComment), tokens));
+            comments.push(extendCommentRange(
+                /** @type {ExtendedComment} */
+                (deepCopy(providedComment)),
+                tokens
+            ));
         }
 
         // This is based on John Freeman's implementation.
-        cursor = 0;
+        let cursor = 0;
         traverse(tree, {
             enter (node) {
                 let comment;
@@ -754,6 +959,8 @@ function clone(exports) {
         return tree;
     }
 
+    function cloneEnvironment () { return clone({}); }
+
     exports.Syntax = Syntax;
     exports.traverse = traverse;
     exports.replace = replace;
@@ -761,7 +968,7 @@ function clone(exports) {
     exports.VisitorKeys = VisitorKeys;
     exports.VisitorOption = VisitorOption;
     exports.Controller = Controller;
-    exports.cloneEnvironment = function () { return clone({}); };
+    exports.cloneEnvironment = cloneEnvironment;
 
     return exports;
 }
