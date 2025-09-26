@@ -65,20 +65,20 @@
  */
 
 /**
- * @param {EstraverseExports} exports
+ * @param {Partial<EstraverseExports>} exports
  * @returns {EstraverseExports}
  */
 function clone(exports) {
     /**
      * @typedef {object} EstraverseExports
-     * @property {Syntax} [Syntax]
-     * @property {traverse} [traverse]
-     * @property {replace} [replace]
-     * @property {attachComments} [attachComments]
-     * @property {VisitorKeys} [VisitorKeys]
-     * @property {VisitorOption} [VisitorOption]
-     * @property {typeof Controller} [Controller]
-     * @property {cloneEnvironment} [cloneEnvironment]
+     * @property {Syntax} Syntax
+     * @property {traverse} traverse
+     * @property {replace} replace
+     * @property {attachComments} attachComments
+     * @property {VisitorKeys} VisitorKeys
+     * @property {VisitorOption} VisitorOption
+     * @property {typeof Controller} Controller
+     * @property {cloneEnvironment} cloneEnvironment
      */
 
     /**
@@ -971,7 +971,7 @@ function clone(exports) {
     exports.Controller = Controller;
     exports.cloneEnvironment = cloneEnvironment;
 
-    return exports;
+    return /** @type {EstraverseExports} */ (exports);
 }
 /* vim: set sw=4 ts=4 et tw=80 : */
 

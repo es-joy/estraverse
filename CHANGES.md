@@ -1,5 +1,9 @@
 # CHANGES for `@es-joy/estraverse`
 
+## 7.1.1
+
+- fix(typescript): avoid undefined types
+
 ## 7.1.0
 
 - chore: update devDeps. and lint

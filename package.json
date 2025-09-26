@@ -10,7 +10,7 @@
     "import": "./dist/estraverse.esm.min.js",
     "require": "./dist/estraverse.min.js"
   },
-  "version": "7.1.0",
+  "version": "7.1.1",
   "engines": {
     "node": ">=4.0"
   },
