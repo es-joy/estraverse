@@ -68,6 +68,7 @@
     ]
   },
   "scripts": {
+    "prepublishOnly": "pnpm build",
     "tsc": "tsc",
     "build": "rollup -c && npm run tsc",
     "test": "npm run lint && npm run unit-test",
