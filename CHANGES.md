@@ -1,5 +1,10 @@
 # CHANGES for `@es-joy/estraverse`
 
+## 7.0.0
+
+- feat: TS support
+- chore: update devDeps. and lint
+
 ## 6.0.0
 
 First version of fork from
