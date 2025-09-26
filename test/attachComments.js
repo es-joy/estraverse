@@ -20,7 +20,7 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 // THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import esprima from 'esprima';
+import * as esprima from 'esprima';
 import { attachComments } from '../src/estraverse.js';
 
 describe('`attachComments` API', function() {

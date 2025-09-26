@@ -886,7 +886,8 @@ function clone(exports) {
             ));
         }
 
-        // This is based on John Freeman's implementation.
+        /* c8 ignore next -- Bug with c8 here */
+        /* This is based on John Freeman's implementation. */
         let cursor = 0;
         traverse(tree, {
             enter (node) {
