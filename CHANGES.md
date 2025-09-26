@@ -1,5 +1,9 @@
 # CHANGES for `@es-joy/estraverse`
 
+## 7.1.0
+
+- chore: update devDeps. and lint
+
 ## 7.0.0
 
 - feat: TS support
